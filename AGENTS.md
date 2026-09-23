@@ -32,6 +32,10 @@ The delivery document is a future implementation plan. It does not authorise acc
 
 Do not put secrets in source, logs, fixtures, or artifacts. Do not expose privileged credentials to untrusted pull-request code. A local or CI failure is a reason to investigate, not a reason to bypass a gate.
 
+## Commit-message practice
+
+In coaching mode, let the developer draft commit messages first. Review the draft against the staged scope, explain corrections, and suggest an improvement. Leave committing to the developer unless explicitly delegated.
+
 ## Handoff
 
 Summarise the behavior delivered, evidence, remaining limitations, and one useful next exercise. In coaching mode, explain the reasoning without supplying the entire solution unless asked.

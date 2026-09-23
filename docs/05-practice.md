@@ -87,3 +87,11 @@ Use a short imperative subject describing the outcome, such as `Show bundled new
 If the project has no Git repository yet, initialise it with `git init`. Review `.gitignore` and use `git status --short --untracked-files=all` to inspect candidates before staging. Keep machine-local configuration, build outputs, IDE state, and credentials out; include the Gradle wrapper. Stage the project files intentionally and review the complete staged snapshot. An honest first subject is `Initialize news app with tested launch screen`. Do not reconstruct a fictional template-only baseline after the feature already exists.
 
 A commit is a local checkpoint. Pushing, opening a PR, and merging are separate steps. Keep CI work as a subsequent coherent change if it is not ready yet.
+
+### Commit-message coaching
+
+The developer drafts each commit message first. The agent reviews its accuracy against the staged changes, imperative wording, and scope, then explains a small improvement. Leave the final wording and commit execution to the developer unless explicitly delegated.
+
+For a workflow that runs Android host tests and builds a debug APK, `Set up Android CI` is a valid broad subject. `Run Android host tests and build debug APK in CI` is more specific about the delivered capability. Use `set up` as the verb; `setup` is a noun or adjective. A message describes the change without claiming an unobserved successful CI run. Keep actual run evidence and outstanding checks in the session record or PR description.
+
+Check the staged snapshot before approving the message. If coaching-document updates are unrelated to the workflow change, stage and commit them separately; the developer drafts that documentation commit message too.
