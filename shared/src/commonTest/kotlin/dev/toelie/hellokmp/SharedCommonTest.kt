@@ -7,6 +7,6 @@ class SharedCommonTest {
 
     @Test
     fun example() {
-        assertEquals(4, 1 + 2)
+        assertEquals(3, 1 + 2)
     }
 }
