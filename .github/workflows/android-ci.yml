@@ -52,3 +52,67 @@ jobs:
           path: androidApp/build/outputs/apk/debug/*.apk
           retention-days: 7
           if-no-files-found: error
+
+  ui-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Java
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: zulu
+          java-version: '21'
+
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run news-list UI test
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: ./gradlew :androidApp:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=dev.toelie.hellokmp.NewsListTest --stacktrace
+
+      - name: Verify news-list test executed
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          report_dir = Path("androidApp/build/outputs/androidTest-results/connected/debug")
+          matches = []
+          for report in report_dir.glob("TEST-*.xml"):
+              for case in ET.parse(report).getroot().iter("testcase"):
+                  if (
+                      case.get("classname") == "dev.toelie.hellokmp.NewsListTest"
+                      and case.get("name") == "launch_displays_bundled_article_titles"
+                  ):
+                      matches.append(case)
+          if not matches:
+              raise SystemExit("Expected news-list test was not found in XML reports.")
+          for case in matches:
+              if any(case.find(tag) is not None for tag in ("skipped", "failure", "error")):
+                  raise SystemExit("News-list test did not complete successfully.")
+          print("Verified: news-list test executed and passed.")
+          PY
+
+      - name: Upload UI-test reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ui-test-reports-${{ github.sha }}
+          path: |
+            androidApp/build/reports/androidTests/connected/debug/
+            androidApp/build/outputs/androidTest-results/connected/debug/
+          retention-days: 7
+          if-no-files-found: error
