@@ -31,7 +31,7 @@ fun App() {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text("Morning update")
-            Text("Science report")
+            Text("Science reprot")
         }
     }
 }
