@@ -1,9 +1,11 @@
 package dev.toelie.hellokmp
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.test.espresso.Espresso.pressBack
 import org.junit.Rule
 import org.junit.Test
 
@@ -23,5 +25,26 @@ class NewsListTest {
         composeRule.onNodeWithText("Science report").performClick()
         composeRule.onNodeWithText("Science report").assertIsDisplayed()
         composeRule.onNodeWithText("Researchers tested a new method for storing solar energy.").assertIsDisplayed()
+    }
+
+    @Test
+    fun back_returns_to_list_and_allows_selecting_another_article() {
+        val scienceBody =
+            "Researchers tested a new method for storing solar energy."
+        val morningBody =
+            "OpenAI has temporarily paused the training of its latest AI models."
+
+        composeRule.onNodeWithText("Science report").performClick()
+        composeRule.onNodeWithText(scienceBody).assertIsDisplayed()
+
+        pressBack()
+
+        composeRule.onNodeWithText("Morning update").assertIsDisplayed()
+        composeRule.onNodeWithText("Science report").assertIsDisplayed()
+        composeRule.onNodeWithText(scienceBody).assertIsNotDisplayed()
+
+        composeRule.onNodeWithText("Morning update").performClick()
+        composeRule.onNodeWithText(morningBody).assertIsDisplayed()
+        composeRule.onNodeWithText(scienceBody).assertIsNotDisplayed()
     }
 }
