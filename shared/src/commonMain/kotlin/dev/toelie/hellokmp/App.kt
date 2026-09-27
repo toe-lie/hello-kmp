@@ -1,37 +1,111 @@
 package dev.toelie.hellokmp
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.navigation3.runtime.NavKey
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import org.jetbrains.compose.resources.painterResource
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
+import kotlinx.serialization.Serializable
+import androidx.savedstate.serialization.SavedStateConfiguration
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
 
-import hellokmp.shared.generated.resources.Res
-import hellokmp.shared.generated.resources.compose_multiplatform
+@Serializable
+private data object NewsListRoute : NavKey
+
+@Serializable
+private data class NewsDetailRoute(val id: String) : NavKey
+
+private val navigationConfig = SavedStateConfiguration {
+    serializersModule = SerializersModule {
+        polymorphic(NavKey::class) {
+            subclass(NewsListRoute::class, NewsListRoute.serializer())
+            subclass(NewsDetailRoute::class, NewsDetailRoute.serializer())
+        }
+    }
+}
+
+data class Article(
+    val id: String,
+    val title: String,
+    val body: String,
+)
+
+val articles = listOf(
+    Article(
+        id = "morning-update",
+        title = "Morning update",
+        body = "OpenAI has temporarily paused the training of its latest AI models."
+    ),
+    Article(
+        id = "science-report",
+        title = "Science report",
+        body = "Researchers tested a new method for storing solar energy."
+    )
+)
 
 @Composable
 @Preview
 fun App() {
+    val backStack = rememberNavBackStack(navigationConfig, NewsListRoute)
     MaterialTheme {
-        Column(
+        NavDisplay(
             modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text("Morning update")
-            Text("Science report")
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .safeContentPadding(),
+            backStack = backStack,
+            entryProvider = entryProvider {
+                entry<NewsListRoute> {
+                    NewsListScreen(
+                        articles = articles,
+                        onArticleClick = { articleId ->
+                            backStack.add(NewsDetailRoute(articleId))
+                        })
+                }
+                entry<NewsDetailRoute> {
+                    NewsDetailScreen(articleId = it.id)
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun NewsListScreen(
+    articles: List<Article>,
+    onArticleClick: (String) -> Unit,
+) {
+    Column() {
+        articles.forEach { article ->
+            Box(
+                modifier = Modifier
+                    .clickable(true) {
+                        onArticleClick(article.id)
+                    }) {
+                Text(article.title)
+            }
         }
+    }
+}
+
+@Composable
+private fun NewsDetailScreen(
+    articleId: String
+) {
+    val article = articles.find { it.id == articleId }
+    Column {
+        Text(article?.title ?: "")
+        Text(article?.body ?: "")
     }
 }
