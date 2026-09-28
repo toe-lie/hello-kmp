@@ -82,11 +82,15 @@ fun App() {
 }
 
 @Composable
-private fun NewsListScreen(
+fun NewsListScreen(
     articles: List<Article>,
     onArticleClick: (String) -> Unit,
 ) {
-    Column() {
+    if (articles.isEmpty()) {
+        return Text("No news available")
+    }
+
+    Column {
         articles.forEach { article ->
             Box(
                 modifier = Modifier
