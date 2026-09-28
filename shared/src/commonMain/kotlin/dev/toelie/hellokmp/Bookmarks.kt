@@ -9,4 +9,8 @@ class Bookmarks {
     fun contains(articleId: String): Boolean {
         return bookmarks.contains(articleId)
     }
+
+    fun remove(articleId: String) {
+        bookmarks.remove(articleId)
+    }
 }
