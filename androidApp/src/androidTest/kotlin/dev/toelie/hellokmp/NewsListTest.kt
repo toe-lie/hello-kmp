@@ -71,4 +71,19 @@ class NewsListTest {
         composeRule.onNodeWithText("Bookmark").assertIsDisplayed()
         composeRule.onNodeWithText("Remove bookmark").assertIsNotDisplayed()
     }
+
+    @Test
+    fun bookmark_is_retained_when_reopening_article() {
+        composeRule.onNodeWithText("Science report").performClick()
+        composeRule.onNodeWithText("Bookmark").performClick()
+        composeRule.onNodeWithText("Remove bookmark").assertIsDisplayed()
+
+        pressBack()
+
+        composeRule.onNodeWithText("Morning update").assertIsDisplayed()
+        composeRule.onNodeWithText("Science report").performClick()
+
+        composeRule.onNodeWithText("Remove bookmark").assertIsDisplayed()
+        composeRule.onNodeWithText("Bookmark").assertIsNotDisplayed()
+    }
 }
