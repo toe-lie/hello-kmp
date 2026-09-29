@@ -113,4 +113,35 @@ class NewsListTest {
         morningRow.assertIsDisplayed()
         morningRow.assert(!hasText("Bookmarked"))
     }
+
+    @Test
+    fun removing_a_bookmark_clears_only_its_list_indicator() {
+        // Bookmark both articles through the UI.
+        composeRule.onNodeWithText("Morning update").performClick()
+        composeRule.onNodeWithText("Bookmark").performClick()
+        composeRule.onNodeWithText("Remove bookmark").assertIsDisplayed()
+        pressBack()
+
+        composeRule.onNodeWithText("Science report").performClick()
+        composeRule.onNodeWithText("Bookmark").performClick()
+        composeRule.onNodeWithText("Remove bookmark").assertIsDisplayed()
+
+        // Remove only the Science bookmark.
+        composeRule.onNodeWithText("Remove bookmark").performClick()
+        composeRule.onNodeWithText("Bookmark").assertIsDisplayed()
+        pressBack()
+
+        val scienceRow = composeRule.onNode(
+            hasText("Science report") and hasClickAction()
+        )
+        val morningRow = composeRule.onNode(
+            hasText("Morning update") and hasClickAction()
+        )
+
+        scienceRow.assertIsDisplayed()
+        scienceRow.assert(!hasText("Bookmarked"))
+
+        morningRow.assertIsDisplayed()
+        morningRow.assert(hasText("Bookmarked"))
+    }
 }
