@@ -16,7 +16,10 @@ class NewsListScreenTest {
     fun empty_list_displays_no_news_message() {
         composeTestRule.setContent {
             MaterialTheme {
-                NewsListScreen(articles = emptyList(), onArticleClick = {})
+                NewsListScreen(
+                    articles = emptyList(),
+                    bookmarks = Bookmarks(),
+                    onArticleClick = {})
             }
         }
         composeTestRule.onNodeWithText("No news available").assertIsDisplayed()
