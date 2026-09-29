@@ -71,6 +71,7 @@ fun App() {
                 entry<NewsListRoute> {
                     NewsListScreen(
                         articles = articles,
+                        bookmarks = bookmarks,
                         onArticleClick = { articleId ->
                             backStack.add(NewsDetailRoute(articleId))
                         })
@@ -89,6 +90,7 @@ fun App() {
 @Composable
 fun NewsListScreen(
     articles: List<Article>,
+    bookmarks: Bookmarks,
     onArticleClick: (String) -> Unit,
 ) {
     if (articles.isEmpty()) {
@@ -97,13 +99,36 @@ fun NewsListScreen(
 
     Column {
         articles.forEach { article ->
-            Box(
-                modifier = Modifier
-                    .clickable(true) {
-                        onArticleClick(article.id)
-                    }) {
-                Text(article.title)
-            }
+            NewsListRow(
+                article = article,
+                bookmarks = bookmarks,
+                onArticleClick = onArticleClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun NewsListRow(
+    article: Article,
+    bookmarks: Bookmarks,
+    onArticleClick: (String) -> Unit,
+) {
+    val bookmarkStatus = remember(bookmarks, article.id) {
+        bookmarks.observeContains(article.id)
+    }
+    val isBookmarked by bookmarkStatus.collectAsState(
+        initial = bookmarks.contains(article.id)
+    )
+
+    Column(
+        modifier = Modifier
+            .clickable(true) {
+                onArticleClick(article.id)
+            }) {
+        Text(article.title)
+        if (isBookmarked) {
+            Text("Bookmarked")
         }
     }
 }

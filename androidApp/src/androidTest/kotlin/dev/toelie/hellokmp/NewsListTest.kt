@@ -1,7 +1,11 @@
 package dev.toelie.hellokmp
 
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -24,7 +28,8 @@ class NewsListTest {
     fun selecting_article_displays_its_detail() {
         composeRule.onNodeWithText("Science report").performClick()
         composeRule.onNodeWithText("Science report").assertIsDisplayed()
-        composeRule.onNodeWithText("Researchers tested a new method for storing solar energy.").assertIsDisplayed()
+        composeRule.onNodeWithText("Researchers tested a new method for storing solar energy.")
+            .assertIsDisplayed()
     }
 
     @Test
@@ -85,5 +90,27 @@ class NewsListTest {
 
         composeRule.onNodeWithText("Remove bookmark").assertIsDisplayed()
         composeRule.onNodeWithText("Bookmark").assertIsNotDisplayed()
+    }
+
+    @Test
+    fun bookmarking_an_article_marks_only_its_list_row() {
+        composeRule.onNodeWithText("Science report").performClick()
+        composeRule.onNodeWithText("Bookmark").performClick()
+        composeRule.onNodeWithText("Remove bookmark").assertIsDisplayed()
+
+        pressBack()
+
+        val scienceRow = composeRule.onNode(
+            hasText("Science report") and hasClickAction()
+        )
+        val morningRow = composeRule.onNode(
+            hasText("Morning update") and hasClickAction()
+        )
+
+        scienceRow.assertIsDisplayed()
+        scienceRow.assert(hasText("Bookmarked"))
+
+        morningRow.assertIsDisplayed()
+        morningRow.assert(!hasText("Bookmarked"))
     }
 }
