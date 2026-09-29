@@ -34,7 +34,9 @@ assertTrue(bookmarks.contains("science-report"))
 
 Make that pass, connect the UI, and rerun the outer test. Then choose removal or article independence as the next example. Keep article IDs distinct from titles. Do not build a repository hierarchy just because bookmarks will eventually persist.
 
-At M3, introduce the storage boundary and prove its real implementation independently. A mocked successful write cannot satisfy the relaunch example.
+At M3, introduce the article-read boundary and verify its HTTP adapter against a local test server. Start with one successful list response, then select loading, empty, error, and retry examples in turn. A fake returning app data cannot establish request paths or JSON decoding. Keep an existing UI journey with controlled data while changing wiring.
+
+At M4, repeat that cycle for selected-article detail. At M5, a fake successful bookmark write cannot establish actual backend persistence. Distinguish client tests against a local server from separate authorised real-service checks. Label tests of previously implemented spike behavior as regression coverage.
 
 ## Reading design feedback
 
@@ -43,7 +45,7 @@ At M3, introduce the storage boundary and prove its real implementation independ
 | A simple rule needs an emulator | Is platform work mixed into business behavior? |
 | Setup requires many unrelated collaborators | Does the subject have too many responsibilities? |
 | A refactor breaks many tests but no behavior | Are assertions coupled to private structure or incidental call order? |
-| Every test mocks a database library | Would an application-owned storage boundary plus real adapter tests express the risk better? |
+| Every test mocks an HTTP library | Would an application-owned loading boundary plus real client/local-server tests express the risk better? |
 | A fake passes while the real app fails | Which semantics, wiring, or platform assumptions does the fake omit? |
 
 Treat these as diagnostic questions. An interface or new layer is justified only if it improves the actual problem.

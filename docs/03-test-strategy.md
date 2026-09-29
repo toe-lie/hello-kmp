@@ -4,34 +4,39 @@
 
 The [Practical Test Pyramid](https://martinfowler.com/articles/practical-test-pyramid.html), by Ham Vocke, argues for feedback at multiple granularities and moving checks downward when higher-level execution adds no confidence. Our policy is to use the cheapest boundary that can expose the relevant defect, while retaining a few complete journeys. There is no required percentage split.
 
-An acceptance test describes a business expectation; it can run at an application boundary or through a UI. An end-to-end test exercises the whole declared path. Name substituted boundaries explicitly: a UI test against a fake repository is not evidence of real persistence.
+An acceptance test describes a business expectation; it can run at an application boundary or through a UI. An end-to-end test exercises the whole declared path. Name substituted boundaries explicitly: a UI test against a fake data source is not evidence of HTTP mapping or backend persistence.
 
 | Risk in this app | Primary check | Additional evidence |
 | --- | --- | --- |
 | Wrong article opens or back navigation fails | UI journey through the real navigation setup | Open a second article after returning to the list |
 | Bookmark toggle affects the wrong article or leaves stale state | Fast behavior tests using real logic | One toggle, back, and reopen UI journey |
 | Empty collection renders incorrectly | Controlled empty-data UI test | Visible “No news available” message |
-| Save reports success but loses data | Real database integration test with close/reopen | Process restart journey |
-| Existing bookmarks destroyed by an upgrade | Previous-schema fixture migrated with production migration code, if the schema changes | Install old build, bookmark an article, upgrade without uninstalling |
-| Failed bookmark save claims success or prevents retry | Application test with controlled write failure; previous saved state is retained | One visible save-error UI test |
+| Wrong request path or JSON mapping | Real HTTP client and adapter against a local test server | Explicit request assertions and agreed response fixtures |
+| Loading, empty, failure, or retry rendered incorrectly | State-holder tests with controlled outcomes | Representative UI wiring tests |
+| Late detail response replaces the currently selected article | Controlled completion order/cancellation test | Navigate between real destinations |
+| Bookmark write claims success before confirmation | Controlled pending, success, and failure tests | Real HTTP mutation mapping and UI feedback |
+| Actual backend differs from fixtures | Separate authorised smoke/contract verification | Service version/environment and observed responses recorded |
+| Upgrade breaks server bookmark reload | Install candidate over previous build and reload controlled user's state | No local schema migration test unless a database is deliberately introduced |
 | App cannot start on a supported target | Packaged app launch on that target | Device exploration before release |
 
 ## Doubles and real dependencies
 
 Use real value objects and cheap deterministic collaborators by default. A stub supplies an answer, a fake supplies a simplified working implementation, and a mock verifies an expected interaction. Android's [test-double guide](https://developer.android.com/training/testing/fundamentals/test-doubles) explains these distinctions and dependency replacement.
 
-For this project, a fake bookmark store is useful for simulating a write failure. It cannot establish real transaction, migration, or durability behavior. Run shared storage-contract examples against the fake and real store where their semantics overlap; retain real-only database tests too. Do not turn a fake into a second production database.
+For M3–M4, use a fake article source for deterministic presentation outcomes and the real HTTP adapter against an isolated local server for transport mapping. Test overlapping contracts without building a second backend. At M5, a fake bookmark source helps simulate pending writes and failures but cannot prove server persistence.
+
+For actual backend verification, run a separate authorised contract/smoke check. Document who owns the service contract and how response examples are checked against it. A stubbed response is evidence of client behavior only. Do not rely on a public service, real account credentials, or a hosted test environment for required PR tests.
 
 Interaction assertions are appropriate when the interaction itself matters: for example, a bookmark save must target the selected article ID. Avoid specifying incidental getter calls or private sequencing. Wrap third-party behavior in a small application-owned boundary only when needed, then verify the adapter with the real library.
 
 ## Deterministic execution
 
-- Each test owns its data and cleanup. Use isolated storage instances; no shared mutable singleton fixtures or test-order dependencies.
+- Each test owns its data and cleanup. Use isolated fake state and local test-server instances; no shared mutable singleton fixtures or test-order dependencies.
 - Inject time and identifier generation when relevant. Seed randomness and include the seed in failures.
-- For coroutine code, control scheduling through the chosen test library and dispatchers. Control completion of asynchronous storage operations when needed; avoid real-time waits.
+- For coroutine code, control scheduling through the chosen test library and dispatchers. Control completion order and cancellation of reads and writes; avoid real-time waits.
 - For UI/device checks, use observable readiness with a deadline, not fixed sleeps. A timeout is a failure with diagnostics.
-- Local and PR suites use bundled articles and isolated bookmark storage. Networking is outside this app’s scope.
-- Reset emulator state between isolated journeys. Within a restart or upgrade journey, deliberately preserve app data.
+- Local and PR suites use deterministic article fixtures and controlled HTTP responses. Local test-server networking is allowed; public-service availability must not determine PR results. A device/emulator needs an explicit route to its test server; record that configuration when introduced.
+- Reset emulator state between isolated journeys. Within restart/upgrade journeys, preserve the relevant controlled user/session and server data. Do not mistake a cached value for a verified server reload.
 
 ## Assertions worth maintaining
 

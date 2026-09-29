@@ -1,6 +1,6 @@
 # Sources and interpretation
 
-References checked on 2026-09-23. This playbook is an original training plan informed by the sources below, not a reproduction of their chapters. The two-screen news app scope is user-selected. Its detailed behavior rules, milestones, timing budgets, collaboration modes, and release exercises are project decisions, not requirements from these sources.
+References checked on 2026-09-23; not reverified during the 2026-09-29 scope update. This playbook is an original training plan informed by the sources below, not a reproduction of their chapters. The two-screen news app scope is user-selected. Its detailed behavior rules, milestones, timing budgets, collaboration modes, and release exercises are project decisions, not requirements from these sources.
 
 | Source | What it supports here | How to use it |
 | --- | --- | --- |
@@ -20,3 +20,7 @@ The title “Test Driven Development: A Practical Guide” needs an author or ed
 ## Where our choices differ from rigid interpretations
 
 Outside-in describes where feature discovery starts; it does not force every rule into a UI test. An outer acceptance example and an inner TDD loop operate at different scopes. Interaction-based design can be useful without requiring mocks for every object. Refactoring is a considered opportunity after green, not mandatory churn. A green test suite supplies evidence about tested behavior, not proof that every important failure has been covered.
+
+## API scope decision
+
+The 2026-09-29 move to list/detail APIs and backend-owned bookmarks comes from the developer's training decision, not a requirement from these sources. Endpoint examples in the project brief are proposals, not a verified provider specification. No HTTP library, live service URL, account, or authentication contract has been selected by this documentation update.

@@ -4,7 +4,7 @@
 
 This is a learning project for an experienced mobile developer practising testing and delivery. Optimise for the developer's ability to reason about tests, not code volume.
 
-Read README.md and the relevant documents under docs/ before working. Current user instructions override these defaults. The agreed product is the two-screen news app in docs/01-project.md. The suggested stack remains provisional until adopted; do not silently turn it into a hard requirement.
+Read README.md and the relevant documents under docs/ before working. Current user instructions override these defaults. The agreed product is the two-screen news app in docs/01-project.md. The current implementation uses KMP/Compose. The next scope is list/detail API integration, then backend-owned bookmarks. Authentication implementation, local database persistence, and offline synchronization are deferred; do not add them implicitly. The practice API contract remains proposed until agreed.
 
 ## Working modes
 
