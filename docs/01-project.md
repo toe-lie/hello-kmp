@@ -2,98 +2,99 @@
 
 ## News List and Detail
 
-A simple mobile app with exactly two screens: **News List** and **News Detail**, with a bookmark action. The purpose is to practise testing, navigation, and delivery with very little product complexity.
+A mobile training app with exactly two screens: **News List** and **News Detail**, with bookmarking. Practise selecting useful tests, integrating external systems, and delivering repeatably.
 
-Use a small, fixed set of bundled articles so the app works offline and tests need no public API. Local bookmark persistence is a later exercise. Exclude article creation or editing, login, search, filters, categories, sharing, notifications, remote feeds, synchronization, and elaborate visual design. There is no separate bookmarks screen.
+Decision updated on 2026-09-29: assume a backend and a wider product with registration and sign-in. Integrate article list and detail APIs first, then backend-owned bookmarks. Authentication screens, registration, token acquisition/refresh, backend implementation, offline synchronization, and a local database are outside the current exercise. Search, pagination, sharing, notifications, and extra screens remain out of scope.
 
-### The two screens
+The existing implementation uses bundled articles and session-only bookmarks. Preserve its tests and behavior while introducing the API boundary incrementally. In-memory bookmark state is not durable and must not be described as surviving Activity recreation or process death.
 
-1. **News List:** show article titles and their bookmark indicators in a fixed order. Selecting an article opens its detail screen.
-2. **News Detail:** show the selected article's title and body, a bookmark toggle, and back navigation to the list.
+### Screens and behavior
 
-The bookmark toggle lives on News Detail; News List reflects its state. Empty and save-error states appear within these screens, not as additional destinations.
+1. **News List:** show article titles in source order and bookmark indicators. Select an article by stable ID to open its detail.
+2. **News Detail:** show the selected article's title and body, bookmark action, and back navigation to the list.
 
-### Behavior rules for practice
+Loading, empty, error, retry, and save-in-progress states belong inside these screens. No separate bookmarks or authentication screen is added.
 
-These are project decisions chosen to keep the exercise small:
+- Article identity is independent of the title. Selecting a second article must not display stale content from the first.
+- A successful empty list response shows “No news available”. Loading and failed requests must not masquerade as an empty result.
+- Failed reads show an error and an explicit retry action. Agree how existing content behaves during retry before implementing that example.
+- Bundled data remains useful as deterministic test fixtures; do not silently fall back to it on a real API failure.
+- M2 bookmarks are session-only, initially unbookmarked, and independent per article. Add/remove changes appear in Detail and List without reordering articles or changing their content.
+- At M5, the backend is authoritative for the current user's bookmarks. Unknown/loading bookmark status is distinct from unbookmarked. Screens use app-facing state and actions, not API response shapes.
+- Proposed M5 write policy: show a pending state and claim success only after server confirmation. A failed request retains the last confirmed state and offers retry. Agree timeout reconciliation and safe retry semantics with the backend before implementing writes; a lost response can leave the server outcome unknown.
+- Relaunch at M5 loads server state for the same controlled user; this proves backend integration, not local database durability. Offline bookmark writes are deferred.
 
-- Each bundled article has a stable, distinct ID, a title, and a body. Selection and bookmarks use the ID, not the title.
-- The list preserves the bundled article order. Bookmarking never reorders it or changes article content.
-- Selecting a row opens the matching article. Back returns to the list; selecting another row shows that article's content and bookmark state.
-- Articles start unbookmarked. Tapping Bookmark marks that article; tapping Remove bookmark unmarks it. Other articles are unaffected.
-- Bookmark changes are visible when returning to the list and reopening the detail screen during the same session.
-- Bookmark state is memory-only until M3. From M3 onward, a successful change survives process termination and relaunch, including removal of a bookmark.
-- At M3, a failed save shows an inline error and retains the previously saved bookmark state. The user can retry the same action; the UI must not claim the change succeeded.
-- An empty article collection shows “No news available” on the list. This is a controlled test case, not a reason to add a feed or refresh feature.
+## Contract before implementation
 
-## Stack decision
+A real service URL, provider, authentication requirements, and complete schema have not been supplied. Do not claim an existing backend contract has been verified. The following is a **proposed practice contract**, to agree or replace before M3 implementation:
 
-Kotlin Multiplatform, Android first and iOS second, remains a suggested route rather than a confirmed requirement. Use a familiar stack if learning KMP would compete with learning testing. The two-screen scope applies whichever stack is chosen.
+| Operation | Proposed successful response |
+| --- | --- |
+| `GET /articles` | HTTP 200 JSON array of `{ id, title }` |
+| `GET /articles/{id}` | HTTP 200 JSON object `{ id, title, body }` |
 
-If using KMP, start with shared Kotlin behavior and a small Android UI. Choose one UI approach at setup and one local persistence mechanism when M3 needs it. Select compatible stable tool versions at implementation time and record exact build commands. Do not introduce a database or repository hierarchy before a real boundary needs it.
+The proposed detail request teaches a separate read boundary. If the actual list already includes the body, reconsider whether another request adds value. Resolve ID types, required fields, response envelopes, ordering, error/status mapping, detail-not-found behavior, timeouts, and authentication before coding the corresponding examples. Do not invent bookmark endpoint paths or mutation semantics yet.
 
-Common tests and platform tests serve different purposes; run shared behavior on supported targets as they are introduced. Consult the official [KMP testing tutorial](https://kotlinlang.org/docs/multiplatform-run-tests.html) during setup. Folder and task names depend on the generated project and plugin configuration.
+Prefer public article reads for this exercise if the contract permits them. If reads require authentication, provide a controlled test-session boundary and an authorised test environment; do not bypass server authentication or hard-code privileged credentials. Mock-server credentials may be synthetic and non-secret. A real endpoint smoke check requires authorised configuration.
+
+## Stack and design
+
+The workspace currently uses Kotlin Multiplatform, shared Compose UI, Navigation 3, and Android-first verification. iOS scaffolding is not proof of iOS behavior. Keep compatible tool versions in the project declarations; choose an HTTP client only after the contract and supported-target needs are clear.
+
+Introduce a small app-owned article-loading boundary when the real HTTP dependency requires it. Translate transport responses into app-facing data there. Do not build speculative repositories or a local database. A short, honestly labelled spike is appropriate for unfamiliar HTTP or coroutine APIs. Preserve important behavior tests across implementation changes.
 
 ## Milestones with exit evidence
 
-Each row may take several sessions. Keep a short scenario list and implement one example at a time using [the development loop](02-development-loop.md). Later milestones are a backlog, not permission to build the whole app at once.
+M0–M2 retain their existing meaning. The previous local-persistence M3 is replaced; the old delivery M4 and optional-platform M5 become M6 and M7. Older session records retain their historical numbering.
 
-| Milestone | Smallest useful increment | Exit evidence and lesson |
+| Milestone | Increment | Exit evidence |
 | --- | --- | --- |
-| M0: walking skeleton | Install and launch Android into News List with a few bundled article titles | One UI assertion runs locally and in CI; deliberately breaking the displayed title fails it. CI builds an installable debug artifact tied to a commit. Learn runner, packaging, and feedback setup. |
-| M1: navigation | Select an article, read its detail, and return to the list | One UI journey selects an article, checks its title and body, goes back, and opens a different article. Add the empty-list example separately. Learn which behavior needs real navigation wiring to prove it. |
-| M2: bookmark interaction | Toggle a bookmark on News Detail and see its state on News List during the same session | Fast behavior tests cover adding, removing, and article independence; one UI journey verifies the toggle and state across back/reopen navigation. Memory-only storage is explicit. Learn state ownership and useful test boundaries. |
-| M3: durable bookmarks | Save a bookmark change, terminate the process, and relaunch with the same state | Real storage integration tests cover add/remove with close/reopen; a process-restart UI journey proves wiring; a controlled write-failure test proves the previous state and error are shown. Refactor only after green. Learn what a fake cannot prove. |
-| M4: delivery rehearsal | Install a CI-produced build on a device and upgrade it with another build | Preserved-bookmark upgrade check, schema migration test if a schema change exists, and a release manifest. Rehearse the delivery runbook within the authorised scope. |
-| M5: optional second platform | Repeat list/detail navigation and bookmark journeys on iOS | Shared tests execute on an iOS simulator; real iOS persistence and UI smoke checks run on macOS CI. Learn platform-specific risk without adding features or screens. |
+| M0: walking skeleton | Launch bundled News List, build and verify in GitHub Actions | Real launch assertion, deliberate failure detected locally and in CI, retained reports, CI debug APK installed and smoke-tested. |
+| M1: navigation | Select Detail, go back, select another article; render empty List | UI journeys prove matching content and back navigation; isolated empty-screen test. |
+| M2: session bookmarks | Add/remove bookmarks, reflect them across List/Detail | Fast membership/independence tests and UI toggle, navigation-retention, and row-indicator checks. No durability claim. |
+| M3: list API | First successful list response, then loading, empty, failure and explicit retry | Real HTTP adapter against local test server; controlled state tests; UI wiring journey. PR tests require no live service. |
+| M4: detail API | Fetch the selected article by ID, then error/not-found handling | Request-path and decoding tests; detail UI journey; controlled tests prevent late responses from displaying the wrong article. |
+| M5: backend bookmarks | Load current-user bookmarks, then confirmed add/remove and reload | Controlled read/write failures; real HTTP adapter tests; load/mutate/reload journey; separate authorised backend evidence. Auth implementation and offline queueing remain deferred. |
+| M6: delivery rehearsal | Identify, install, and upgrade a CI-produced candidate | Release manifest, authorised private-channel rehearsal, read/bookmark smoke checks, and server-state reload after upgrade. Signing limitations explicit. |
+| M7: optional second platform | Exercise adopted article and bookmark behavior on iOS | Shared tests on iOS and real platform HTTP/UI checks on macOS. |
 
-M0 proves only the boundaries present then. Add navigation evidence at M1, bookmark behavior at M2, and real persistence evidence at M3. The product is complete after M3; M4 practises delivery, and M5 is optional platform practice. Networking is outside this project scope.
+Implement one example at a time. M3 is the next learning slice, not permission to implement all milestones.
 
-## First acceptance examples
+## Next acceptance examples
 
-Keep these as scenario notes initially, not an entire executable suite:
+These are scenario notes, not a request to generate a whole suite:
 
 ```gherkin
-# M1: navigation
-Given the news list contains "Morning update" and "Science report"
-When I select "Science report"
-Then I see the title and body of "Science report" on News Detail
-When I navigate back
-Then I see News List with both articles in their original order
+# M3: first success
+Given the article service returns "Morning update" and "Science report"
+When I open News List
+Then both titles appear in response order
 
-# M2: bookmark within a session
-Given "Science report" and "Morning update" are unbookmarked
-And I am viewing the detail of "Science report"
-When I tap Bookmark and navigate back
-Then "Science report" is marked as bookmarked in News List
-And "Morning update" remains unbookmarked
-When I reopen "Science report"
-Then its action is Remove bookmark
+# M3: empty result, selected later
+Given the article service returns a successful empty list
+When loading finishes
+Then I see "No news available"
 
-# M2: remove a bookmark
-Given "Science report" is bookmarked
-When I open its detail and tap Remove bookmark
-And I navigate back
-Then "Science report" is no longer marked as bookmarked
+# M3: failure and retry, selected later
+Given loading articles fails
+When I open News List
+Then I see an error and a Retry action
+When I retry and the service returns articles
+Then the article titles appear
 
-# M3: persistence
-Given I have successfully bookmarked "Science report"
-When the app process is terminated and relaunched without clearing its data
-Then "Science report" is still marked as bookmarked
+# M4: selected detail
+Given News List contains "Science report"
+When I select it and its detail request succeeds
+Then I see its title and body
 
-# M3: failed save
-Given "Science report" is unbookmarked
-And the next bookmark save will fail
-When I open its detail and tap Bookmark
-Then I see a save error
-And "Science report" remains unbookmarked
-And the Bookmark action is available to retry
+# M5: proposed confirmed write
+Given the current user's article is unbookmarked
+When I request a bookmark and the service confirms success
+Then List and Detail show it as bookmarked
+When I relaunch and reload that user's bookmarks successfully
+Then it remains bookmarked
 ```
 
-At M3, also select an example proving a removed bookmark stays removed after relaunch. An activity recreation alone does not prove survival across process death. A force-stop/relaunch proves process durability, not survival of a sudden power failure.
+A local server simulates agreed responses and proves client behavior; it does not prove the actual backend implements that agreement. Track live-service verification separately.
 
-## Using the other guides
-
-Use [the development loop](02-development-loop.md) for one-example-at-a-time practice, [the test strategy](03-test-strategy.md) to choose boundaries, [the delivery plan](04-delivery.md) for build evidence, and [the session template](05-practice.md) to record learning. Navigation starts at M1, bookmarking at M2, and persistence at M3. Networking is outside scope.
-
-Start with M0 only. Finish with one meaningful UI assertion, evidence that it detects broken behavior, a passing build, and reproducible commands. No application implementation or publishing is authorised by this documentation change.
+Use [the development loop](02-development-loop.md), [test strategy](03-test-strategy.md), [delivery plan](04-delivery.md), and [session template](05-practice.md). This document update authorises no implementation, account creation, deployment, or publishing.

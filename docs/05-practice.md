@@ -4,7 +4,7 @@
 
 Use 45–90 minute sessions as a starting point. Spend a few minutes choosing examples, most of the session in short feedback cycles, and the last few minutes recording what changed in your understanding. This is a practice suggestion, not a time limit on difficult work.
 
-Read just enough to answer the current question. Pair M0 with GOOS chapters 4 and 10–11; revisit chapter 5 during M1–M2, chapter 25 during M3, and chapters 26–27 if asynchronous storage work needs further study. These chapter topics are listed in the [author-maintained contents](https://growing-object-oriented-software.com/toc.html). Reading is preparation for an experiment, not a prerequisite exam.
+Read just enough to answer the current question. Pair M0 with GOOS chapters 4 and 10–11; revisit chapter 5 during M1–M2, chapter 8 during M3–M5, and chapters 26–27 as asynchronous API work arrives. Chapter 25 is optional if a later scope change introduces local persistence. These chapter topics are listed in the [author-maintained contents](https://growing-object-oriented-software.com/toc.html). Reading is preparation for an experiment, not a prerequisite exam.
 
 ## Session record
 
@@ -64,9 +64,11 @@ Keep evidence brief. A record per meaningful cycle is useful; a transcript of ev
 
 1. M1: deliberately open the wrong article and prove the navigation test detects it. Restore the code and verify green.
 2. M2: temporarily make bookmark removal do nothing and prove a test detects it. Restore the code and verify green.
-3. M3: compare fake-store evidence with real storage close/reopen tests. Identify a bug only the real adapter test could catch. Then try a small internal refactor and investigate any test edits it requires.
-4. M4: produce a broken pipeline run on a temporary branch. Verify required checks block promotion and diagnostics are sufficient.
-5. M5: name a platform difference shared tests do not cover, then add the smallest useful platform check.
+3. M3: compare a fake article source with the real HTTP adapter/local-server test. Change a response field or request path and identify which test catches the defect.
+4. M4: complete detail requests in reverse order and verify the displayed content still belongs to the selected article.
+5. M5: simulate a pending, failed, then confirmed bookmark write. Explain which evidence proves client behavior and which still requires the backend.
+6. M6: verify required checks block promotion and reports survive failure; rehearse the authorised candidate installation and upgrade.
+7. M7: name an iOS behavior shared host tests do not cover, then add the smallest platform check.
 
 After each milestone, review feedback time, unexplained failures, escaped defects, and your own ability to select the next test. Count completed learning exercises rather than maximising test count or coverage percentage.
 
