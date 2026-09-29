@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -57,6 +58,7 @@ val articles = listOf(
 @Composable
 @Preview
 fun App() {
+    val bookmarks = remember { Bookmarks() }
     val backStack = rememberNavBackStack(navigationConfig, NewsListRoute)
     MaterialTheme {
         NavDisplay(
@@ -74,7 +76,10 @@ fun App() {
                         })
                 }
                 entry<NewsDetailRoute> {
-                    NewsDetailScreen(articleId = it.id)
+                    NewsDetailScreen(
+                        articleId = it.id,
+                        bookmarks = bookmarks,
+                    )
                 }
             }
         )
@@ -105,11 +110,27 @@ fun NewsListScreen(
 
 @Composable
 private fun NewsDetailScreen(
-    articleId: String
+    articleId: String,
+    bookmarks: Bookmarks,
 ) {
     val article = articles.find { it.id == articleId }
+    val bookmarkStatus = remember(bookmarks, articleId) {
+        bookmarks.observeContains(articleId)
+    }
+    val isBookmarked by bookmarkStatus.collectAsState(
+        initial = bookmarks.contains(articleId)
+    )
+
     Column {
         Text(article?.title ?: "")
+        if (isBookmarked)
+            Button(onClick = { bookmarks.remove(articleId) }) {
+                Text("Remove bookmark")
+            }
+        else
+            Button(onClick = { bookmarks.add(articleId) }) {
+                Text("Bookmark")
+            }
         Text(article?.body ?: "")
     }
 }

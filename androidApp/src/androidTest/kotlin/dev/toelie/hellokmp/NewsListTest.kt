@@ -47,4 +47,28 @@ class NewsListTest {
         composeRule.onNodeWithText(morningBody).assertIsDisplayed()
         composeRule.onNodeWithText(scienceBody).assertIsNotDisplayed()
     }
+
+    @Test
+    fun bookmarking_an_article_updates_the_action() {
+        composeRule.onNodeWithText("Science report").performClick()
+        composeRule.onNodeWithText("Science report").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Bookmark").assertIsDisplayed()
+        composeRule.onNodeWithText("Bookmark").performClick()
+
+        composeRule.onNodeWithText("Remove bookmark").assertIsDisplayed()
+        composeRule.onNodeWithText("Bookmark").assertIsNotDisplayed()
+    }
+
+    @Test
+    fun removing_a_bookmark_restores_the_bookmark_action() {
+        composeRule.onNodeWithText("Science report").performClick()
+        composeRule.onNodeWithText("Bookmark").performClick()
+        composeRule.onNodeWithText("Remove bookmark").assertIsDisplayed()
+
+        composeRule.onNodeWithText("Remove bookmark").performClick()
+
+        composeRule.onNodeWithText("Bookmark").assertIsDisplayed()
+        composeRule.onNodeWithText("Remove bookmark").assertIsNotDisplayed()
+    }
 }
